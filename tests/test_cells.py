@@ -27,14 +27,6 @@ class TestCellsToUnicode(unittest.TestCase):
 		self.assertEqual(cells.cellsToUnicode([1, 3]), "\u2801\u2803")
 
 
-class TestStripUnicodeBraille(unittest.TestCase):
-	def test_braille_characters_are_removed(self):
-		self.assertEqual(cells.stripUnicodeBraille("a\u2833\u282db"), "ab")
-
-	def test_plain_text_is_unchanged(self):
-		self.assertEqual(cells.stripUnicodeBraille("plain text"), "plain text")
-
-
 class TestMapFlags(unittest.TestCase):
 	MAPPING = {2: 1 << 1, 256: 1 << 6}
 

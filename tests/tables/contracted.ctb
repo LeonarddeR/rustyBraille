@@ -1,0 +1,14 @@
+# Contractions for the translation mode tests, after the louis-rs unit tests.
+# "abc" contracts to one cell, "about" is a whole word, and comp6 gives each
+# letter its computer braille.
+space \s 0
+lowercase a 1
+lowercase b 12
+lowercase c 14
+always abc 123456
+word about 1-12
+comp6 a 2
+comp6 b 23
+comp6 c 25
+begcomp 456-346
+endcomp 456-156

@@ -36,12 +36,7 @@ The first call uses louis-rs, the second the original liblouis function.
 
 ## Known gaps
 
-The louis-rs revision in this release accepts, but does not yet apply, several liblouis translation modes.
-As a result:
-
-* "Expand the word at the cursor to computer braille" has no effect ([louis-rs#20](https://github.com/liblouis/louis-rs/issues/20)).
-* Contracted braille input is translated as if every buffered word were complete, so intermediate words may read differently than with liblouis ([louis-rs#19](https://github.com/liblouis/louis-rs/issues/19)).
-* Characters a table does not define are shown as a short `\x` escape rather than liblouis's `\xHHHH` form. Cells typed on a braille display that the input table does not define are dropped.
+* Characters a table does not define are shown as a `\x` escape with the character's code, as in liblouis, but the cells around and inside the escape can differ from liblouis's.
 * Routing and cursor positions may differ from liblouis in contracted tables.
 
 ## Differences from liblouis

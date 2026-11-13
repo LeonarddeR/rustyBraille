@@ -11,7 +11,7 @@ import unittest
 from unittest import mock
 
 import louisHelper
-from globalPlugins.oxidizedBraille import louis_py, patch, translator
+from globalPlugins.oxidizedBraille import cells, louis_py, patch, translator
 from logHandler import log
 
 from tests._stubs import PanicException
@@ -69,6 +69,22 @@ class TestFallback(unittest.TestCase):
 		self.assertEqual([level for level, _ in log.records], ["error"])
 		self.assertEqual(self.compile.call_count, 1)
 
+	def test_table_compile_error_falls_back_logs_once_and_is_not_compiled_again(self):
+		self.compile.side_effect = louis_py.TableCompileError("line 3: base character 'a' of 'A' not defined")
+		for _ in range(2):
+			self.assertEqual(self.louisPatch._run(["a.ctb"], False, work, fallback), "liblouis")
+		self.assertEqual([level for level, _ in log.records], ["error"])
+		self.assertEqual(self.compile.call_count, 1)
+
+	def test_each_table_error_is_logged_once(self):
+		exc = louis_py.TableParseError("first problem (and 1 more)")
+		exc.errors = ["first problem", "second problem"]
+		self.compile.side_effect = exc
+		self.louisPatch._run(["a.ctb"], False, work, fallback)
+		(message,) = log.recordsAt("error")
+		self.assertEqual(message.count("first problem"), 1)
+		self.assertIn("second problem", message)
+
 	def test_failure_is_reported_per_direction(self):
 		self.compile.side_effect = louis_py.TableParseError("bad table")
 		self.louisPatch._run(["a.ctb"], False, work, fallback)
@@ -89,9 +105,9 @@ class TestFallback(unittest.TestCase):
 		self.assertEqual(len(log.recordsAt("exception")), 1)
 		self.assertEqual(self.compile.call_count, 2)
 
-	def test_translation_error_falls_back_and_logs_once(self):
+	def test_failing_translation_falls_back_and_logs_once(self):
 		def failing(compiled: object) -> str:
-			raise louis_py.TranslationError("boom")
+			raise RuntimeError("boom")
 
 		for _ in range(2):
 			self.assertEqual(self.louisPatch._run(["a.ctb"], False, failing, fallback), "liblouis")
@@ -141,6 +157,15 @@ class TestTranslate(PatchTestCase):
 		self.assertEqual(cells, [1, 3])
 		self.assertEqual(rawToBraillePos, [0, 1])
 
+	def test_word_at_the_cursor_is_expanded_to_computer_braille(self):
+		mode = louisHelper.TranslationMode.COMPBRL_AT_CURSOR
+		result = self.module.translate(["contracted.ctb"], "abc abc", cursorPos=5, mode=mode)
+		self.assertEqual(result[0], cells.unicodeToCells("⠿⠀⠂⠆⠒"))
+
+	def test_without_expand_at_cursor_the_cursor_word_stays_contracted(self):
+		result = self.module.translate(["contracted.ctb"], "abc abc", cursorPos=5)
+		self.assertEqual(result[0], cells.unicodeToCells("⠿⠀⠿"))
+
 	def test_typeform_length_mismatch_does_not_raise(self):
 		typeform = [louisHelper.Typeform.ITALIC]
 		self.assertEqual(self.module.translate(["mini.ctb"], "abc", typeform=typeform)[0], [1, 3, 9])
@@ -170,12 +195,17 @@ class TestTranslate(PatchTestCase):
 
 class TestBackTranslate(PatchTestCase):
 	def test_round_trip_through_louis_rs(self):
-		cells = self.module.translate(["mini.ctb"], "abc")[0]
-		self.assertEqual(self.module.backTranslate(["mini.ctb"], cells), "abc")
+		braille = self.module.translate(["mini.ctb"], "abc")[0]
+		self.assertEqual(self.module.backTranslate(["mini.ctb"], braille), "abc")
 		self.originalBackTranslate.assert_not_called()
 
-	def test_escaped_undefined_cells_are_dropped(self):
+	def test_undefined_cells_are_dropped(self):
 		self.assertEqual(self.module.backTranslate(["mini.ctb"], [1, 0x3F, 3]), "ab")
+
+	def test_partial_input_leaves_whole_word_rules_waiting(self):
+		self.assertEqual(self.module.backTranslate(["contracted.ctb"], [1, 3]), "about")
+		mode = louisHelper.TranslationMode.PARTIAL_TRANS
+		self.assertEqual(self.module.backTranslate(["contracted.ctb"], [1, 3], mode=mode), "ab")
 
 	def test_mode_is_mapped_for_louis_rs(self):
 		spy = self.enterContext(mock.patch.object(translator, "backTranslateCells", return_value=""))

@@ -25,11 +25,7 @@ MODE_MAP: Mapping[int, int] = {
 	louisHelper.TranslationMode.COMPBRL_AT_CURSOR: louis_py.TranslationMode.COMPBRL_AT_CURSOR,
 	louisHelper.TranslationMode.PARTIAL_TRANS: louis_py.TranslationMode.PARTIAL_TRANS,
 }
-"""NVDA translation mode bits and the louis-rs mode bits they map to.
-
-louis-rs accepts both bits without applying them yet: liblouis/louis-rs#20 covers
-``COMPBRL_AT_CURSOR`` and #19 ``PARTIAL_TRANS``.
-"""
+"""NVDA translation mode bits and the louis-rs mode bits they map to."""
 
 TYPEFORM_CLASSES: Mapping[int, str] = {
 	int(louisHelper.Typeform.ITALIC): "italic",
@@ -46,7 +42,7 @@ def compileTables(tables: tuple[str, ...], backward: bool) -> louis_py.Translato
 	:param backward: Whether the translator back-translates braille to text.
 	:return: A translator for the resolved tables.
 	:raises LookupError: If NVDA cannot resolve one of the tables.
-	:raises louis_py.TableParseError: If louis-rs cannot compile the resolved tables.
+	:raises louis_py.LouisError: If louis-rs cannot read or compile the resolved tables.
 	"""
 	paths = list(louisHelper._resolveTableInner(list(tables)))
 	return translator.compileTranslator(paths, backward, brailleTables.TABLES_DIR)
@@ -85,9 +81,9 @@ class LouisHelperPatch:
 			return self._translators[key]
 		try:
 			compiled = self._compile(*key)
-		except (louis_py.TableParseError, LookupError) as exc:
+		except (louis_py.LouisError, LookupError) as exc:
 			tables, backward = key
-			reasons = [str(exc), *getattr(exc, "errors", [])]
+			reasons = getattr(exc, "errors", None) or [str(exc)]
 			log.error(
 				f"louis-rs cannot use tables {list(tables)} for {'backward' if backward else 'forward'} "
 				"translation; falling back to liblouis for them until the next configuration reset. "

@@ -1,5 +1,5 @@
 version = 1
-revision = 3
+revision = 5
 requires-python = "==3.13.*"
 
 [[package]]
@@ -75,7 +75,7 @@ name = "louis-py"
 version = "0.1.0"
 source = { path = "wheels/louis_py-0.1.0-cp311-abi3-win_amd64.whl" }
 wheels = [
-    { filename = "louis_py-0.1.0-cp311-abi3-win_amd64.whl", hash = "sha256:2d6426ecf17918698aa68fe6a6d8b1a4c64d0ac54c5ae4b5acf2b92d51d4bca0" },
+    { filename = "louis_py-0.1.0-cp311-abi3-win_amd64.whl", hash = "sha256:0b738742f329ba73d69139203f55e0a0e5c7c4604e9631fb9b83d4e627db254c" },
 ]
 
 [[package]]

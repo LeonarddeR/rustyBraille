@@ -12,7 +12,7 @@ from collections.abc import Sequence
 from logHandler import log
 
 from . import louis_py
-from .cells import cellsToUnicode, isUnicodeBraille, stripUnicodeBraille, unicodeToCells
+from .cells import cellsToUnicode, isUnicodeBraille, unicodeToCells
 
 
 def compileTranslator(tables: Sequence[str], backward: bool, builtinDir: str) -> louis_py.Translator:
@@ -25,7 +25,7 @@ def compileTranslator(tables: Sequence[str], backward: bool, builtinDir: str) ->
 	:param backward: Whether the translator back-translates braille to text.
 	:param builtinDir: NVDA's built-in table directory.
 	:return: The compiled translator.
-	:raises louis_py.TableParseError: If louis-rs cannot compile the tables.
+	:raises louis_py.LouisError: If louis-rs cannot read or compile the tables.
 	"""
 	direction = louis_py.Direction.BACKWARD if backward else louis_py.Direction.FORWARD
 	searchPath = list(dict.fromkeys([*(os.path.dirname(table) for table in tables), builtinDir]))
@@ -55,24 +55,19 @@ def translateText(
 		text,
 		mode=mode,
 		emphasis=list(emphasis),
-		cursor_pos=None if cursorPos is None else max(cursorPos, 0),
+		cursor_position=None if cursorPos is None else max(cursorPos, 0),
 	)
-	assert result.input_positions is not None and result.output_positions is not None
 	cells = unicodeToCells(result.output)
 	nonBraille = [f"U+{ord(char):04X}" for char in result.output if not isUnicodeBraille(char)]
 	if nonBraille:
 		log.debug(
 			f"louis-rs produced characters outside the braille block, shown as full cells: {nonBraille}",
 		)
-	return cells, result.input_positions, result.output_positions, result.cursor_pos
+	return cells, result.input_positions, result.output_positions, result.cursor_position
 
 
 def backTranslateCells(compiled: louis_py.Translator, cells: Sequence[int], *, mode: int) -> str:
 	"""Back-translate cells the way ``louisHelper.backTranslate`` does, dropping undefined cells.
-
-	louis-rs accepts ``NO_UNDEFINED`` without applying it and renders a cell it cannot back-translate
-	as an escape made of braille characters, so removing braille characters from the output leaves
-	only the translated text. The stripping is dead code once louis-rs honours the mode.
 
 	:param compiled: A backward translator.
 	:param cells: The braille cells to back-translate; every cell is masked to a byte.
@@ -83,4 +78,4 @@ def backTranslateCells(compiled: louis_py.Translator, cells: Sequence[int], *, m
 		cellsToUnicode(cells),
 		mode=mode | louis_py.TranslationMode.NO_UNDEFINED,
 	)
-	return stripUnicodeBraille(result.output)
+	return result.output

@@ -44,7 +44,7 @@ Everything lives in one package, `addon/globalPlugins/oxidizedBraille/`:
 
 ## louis-rs constraints the code works around
 
-At the vendored revision louis-rs looks tables and `include` lines up only in the directories louis-py is handed as `search_path=`, does not apply translation modes (#19 `partialTrans`, #20 `compbrlAtCursor`), and renders undefined cells in back-translation as braille-character escapes (no issue filed). See the readme's "Known gaps" before changing behaviour here. Honouring `NO_UNDEFINED` retires the braille stripping in `backTranslateCells`.
+At the vendored revision louis-rs looks tables and `include` lines up only in the directories louis-py is handed as `search_path=`. It applies the `COMPBRL_AT_CURSOR`, `PARTIAL_TRANS` and `NO_UNDEFINED` modes NVDA relies on, but writes undefined characters differently from liblouis. A table can fail to compile with `louis_py.TableCompileError` (a rule refers to something no rule defines, such as the base character of a `base` rule) as well as `TableParseError`; both derive from `louis_py.LouisError`, which the patch catches to fall back to liblouis. See the readme's "Known gaps" before changing behaviour here.
 
 ## Bundling louis_py
 

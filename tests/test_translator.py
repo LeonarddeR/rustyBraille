@@ -98,7 +98,7 @@ class FakeResult:
 	output: str
 	input_positions: list[int]
 	output_positions: list[int]
-	cursor_pos: int | None
+	cursor_position: int | None
 
 
 def fakeTranslator(result: FakeResult) -> mock.Mock:
@@ -148,7 +148,7 @@ class TestBackTranslateCells(unittest.TestCase):
 	def test_cells_are_back_translated(self):
 		self.assertEqual(translator.backTranslateCells(self.mini, [1, 3], mode=0), "ab")
 
-	def test_escaped_undefined_cells_are_dropped(self):
+	def test_undefined_cells_are_dropped(self):
 		self.assertEqual(translator.backTranslateCells(self.mini, [1, 0x3F, 3], mode=0), "ab")
 
 	def test_cells_are_masked_to_a_byte(self):

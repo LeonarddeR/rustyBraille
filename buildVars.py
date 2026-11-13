@@ -29,7 +29,7 @@ addon_info = AddonInfo(
 		"Braille translation powered by louis-rs, a Rust re-implementation of liblouis. Experimental.",
 	),
 	# version
-	addon_version="0.1.0",
+	addon_version="0.1.1",
 	# Brief changelog for this version
 	# Translators: what's new content for the add-on version to be shown in the add-on store
 	addon_changelog=_("Initial experimental release."),

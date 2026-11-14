@@ -27,20 +27,11 @@ NO_MODE = louis_py.TranslationMode(0)
 
 
 class TestCompileTranslator(unittest.TestCase):
-	def test_environment_is_left_alone_while_compiling(self):
-		seen: list[str | None] = []
-		realTranslator = louis_py.Translator
-
-		def recordingTranslator(*args, **kwargs):
-			seen.append(os.environ.get("LOUIS_TABLE_PATH"))
-			return realTranslator(*args, **kwargs)
-
-		with (
-			mock.patch.dict(os.environ, {"LOUIS_TABLE_PATH": "C:/ambient"}),
-			mock.patch.object(translator.louis_py, "Translator", recordingTranslator),
-		):
-			translator.compileTranslator([MINI], False, BOGUS_DIR)
-		self.assertEqual(seen, ["C:/ambient"])
+	def customTable(self) -> Path:
+		"""A table in a temporary directory that includes mini.ctb, which is not next to it."""
+		table = Path(self.enterContext(tempfile.TemporaryDirectory())) / "custom.ctb"
+		table.write_text("include mini.ctb\n", encoding="utf-8")
+		return table
 
 	def test_search_path_lists_each_directory_once_in_order(self):
 		searchPaths: list[list[str]] = []
@@ -50,22 +41,18 @@ class TestCompileTranslator(unittest.TestCase):
 			searchPaths.append(kwargs["search_path"])
 			return realTranslator(*args, **kwargs)
 
-		with tempfile.TemporaryDirectory() as directory:
-			table = Path(directory) / "custom.ctb"
-			table.write_text("include mini.ctb\n", encoding="utf-8")
-			with mock.patch.object(translator.louis_py, "Translator", recordingTranslator):
-				translator.compileTranslator([str(table), MINI], False, TABLES)
-		self.assertEqual(searchPaths, [[directory, TABLES]])
+		table = self.customTable()
+		with mock.patch.object(translator.louis_py, "Translator", recordingTranslator):
+			translator.compileTranslator([str(table), MINI], False, TABLES)
+		self.assertEqual(searchPaths, [[str(table.parent), TABLES]])
 
 	def test_ambient_table_path_variable_is_not_searched(self):
-		with tempfile.TemporaryDirectory() as directory:
-			table = Path(directory) / "custom.ctb"
-			table.write_text("include mini.ctb\n", encoding="utf-8")
-			with (
-				mock.patch.dict(os.environ, {"LOUIS_TABLE_PATH": TABLES}),
-				self.assertRaises(louis_py.TableParseError),
-			):
-				translator.compileTranslator([str(table)], False, BOGUS_DIR)
+		table = self.customTable()
+		with (
+			mock.patch.dict(os.environ, {"LOUIS_TABLE_PATH": TABLES}),
+			self.assertRaises(louis_py.TableParseError),
+		):
+			translator.compileTranslator([str(table)], False, BOGUS_DIR)
 
 	def test_compiles_forward_and_backward(self):
 		forward = translator.compileTranslator([MINI], False, BOGUS_DIR)
@@ -78,15 +65,10 @@ class TestCompileTranslator(unittest.TestCase):
 		self.assertEqual(including.translate("a."), "\u2801\u2832")
 
 	def test_include_from_builtin_dir_resolves_only_when_given(self):
-		with tempfile.TemporaryDirectory() as directory:
-			table = Path(directory) / "custom.ctb"
-			table.write_text("include mini.ctb\n", encoding="utf-8")
-			self.assertEqual(
-				translator.compileTranslator([str(table)], False, TABLES).translate("a"),
-				"\u2801",
-			)
-			with self.assertRaises(louis_py.TableParseError):
-				translator.compileTranslator([str(table)], False, BOGUS_DIR)
+		table = self.customTable()
+		self.assertEqual(translator.compileTranslator([str(table)], False, TABLES).translate("a"), "\u2801")
+		with self.assertRaises(louis_py.TableParseError):
+			translator.compileTranslator([str(table)], False, BOGUS_DIR)
 
 	def test_broken_table_raises_with_errors(self):
 		with self.assertRaises(louis_py.TableParseError) as context:

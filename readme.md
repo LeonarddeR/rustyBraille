@@ -41,7 +41,7 @@ The first call uses louis-rs, the second the original liblouis function.
 
 ## Differences from liblouis
 
-* A table included by another table is looked up next to the tables selected for translation and among NVDA's built-in tables, and nowhere else. This differs from liblouis only when a table includes another table from a third directory: louis-rs resolves includes against that list rather than relative to the including table.
+* louis-rs looks up every included table, also one included by a built-in table, next to the tables selected for translation first, then among NVDA's built-in tables, and nowhere else. liblouis looks next to the including table first. As a result, a table cannot include a table from a third directory, and a table next to a selected custom table takes the place of the built-in table with the same name, also for the built-in tables that include it.
 
 ## Third-party components
 

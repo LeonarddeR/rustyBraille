@@ -19,8 +19,8 @@ from logHandler import log
 class TestGlobalPlugin(unittest.TestCase):
 	def setUp(self):
 		log.records.clear()
-		self.originalTranslate = louisHelper.translate
-		self.originalBackTranslate = louisHelper.backTranslate
+		self.originalTranslate = self.enterContext(mock.patch.object(louisHelper, "translate"))
+		self.originalBackTranslate = self.enterContext(mock.patch.object(louisHelper, "backTranslate"))
 		self.plugin = rustyBraille.GlobalPlugin()
 		self.addCleanup(self.plugin.terminate)
 

@@ -14,10 +14,10 @@ from .cells import cellsToUnicode, unicodeToCells
 
 
 def compileTranslator(tables: Sequence[str], backward: bool, builtinDir: str) -> louis_py.Translator:
-	"""Compile absolute table paths, resolving their includes the way NVDA's own resolver does.
+	"""Compile absolute table paths.
 
-	An included table is looked up next to each table first, then in the built-in table directory,
-	and nowhere else.
+	Every included table, also one included by a built-in table, is looked up in the directories of
+	``tables`` first, in their order, then in the built-in table directory, and nowhere else.
 
 	:param tables: Absolute paths of the tables to compile.
 	:param backward: Whether the translator back-translates braille to text.

@@ -68,6 +68,7 @@ class LouisHelperPatch:
 		self._compile = compile
 		self._translators: dict[TableKey, louis_py.Translator | None] = {}
 		self._originals: dict[str, Callable[..., Any]] = {}
+		self._installed = False
 		self._reported: set[TableKey] = set()
 
 	def _translator(self, key: TableKey) -> louis_py.Translator | None:
@@ -77,18 +78,25 @@ class LouisHelperPatch:
 		:return: The translator, or ``None`` when its tables cannot be compiled.
 			That is logged once and remembered until :meth:`clearCache`.
 		"""
-		if key in self._translators:
+		try:
 			return self._translators[key]
+		except KeyError:
+			pass
 		try:
 			compiled = self._compile(*key)
-		except (louis_py.LouisError, LookupError) as exc:
+		except BaseException as exc:
+			if not isRecoverable(exc):
+				raise
 			tables, backward = key
-			reasons = getattr(exc, "errors", None) or [str(exc)]
-			log.error(
+			message = (
 				f"louis-rs cannot use tables {list(tables)} for {'backward' if backward else 'forward'} "
-				"translation; falling back to liblouis for them until the next configuration reset. "
-				f"{'; '.join(reasons)}",
+				"translation; falling back to liblouis for them until the next configuration reset."
 			)
+			if isinstance(exc, louis_py.LouisError):
+				reasons = getattr(exc, "errors", None) or [str(exc)]
+				log.error(f"{message} {'; '.join(reasons)}")
+			else:
+				log.exception(message)
 			compiled = None
 		self._translators[key] = compiled
 		return compiled
@@ -106,8 +114,11 @@ class LouisHelperPatch:
 		:param backward: Whether to back-translate braille to text.
 		:param work: Receives the translator and returns the result of a translation.
 		:param fallback: Runs the original liblouis function with the original arguments.
-		:return: The result of ``work``, or of ``fallback``.
+		:return: The result of ``work``, or of ``fallback``, which also serves every call after
+			:meth:`uninstall`.
 		"""
+		if not self._installed:
+			return fallback()
 		key: TableKey = (tuple(tableList), backward)
 		try:
 			compiled = self._translator(key)
@@ -137,6 +148,11 @@ class LouisHelperPatch:
 		The parameters and the result are those of ``louisHelper.translate``.
 		"""
 		text = inbuf.replace("\0", "")
+		textTypeform = (
+			None
+			if typeform is None
+			else [flag for char, flag in zip(inbuf, typeform, strict=False) if char != "\0"]
+		)
 		return self._run(
 			tableList,
 			False,
@@ -144,7 +160,7 @@ class LouisHelperPatch:
 				compiled,
 				text,
 				mode=mapModes(mode, MODE_MAP),
-				emphasis=typeformToEmphasis(typeform, TYPEFORM_CLASSES, len(text)),
+				emphasis=typeformToEmphasis(textTypeform, TYPEFORM_CLASSES, len(text)),
 				cursorPos=cursorPos,
 			),
 			fallback=lambda: self._originals["translate"](tableList, inbuf, typeform, cursorPos, mode),
@@ -172,7 +188,7 @@ class LouisHelperPatch:
 		:param module: The ``louisHelper`` module, or a stand-in with the same two functions.
 		:raises RuntimeError: If a patch is already installed.
 		"""
-		if self._originals or any(
+		if self._installed or any(
 			isinstance(getattr(getattr(module, name), "__self__", None), LouisHelperPatch)
 			for name in PATCHED_NAMES
 		):
@@ -180,20 +196,25 @@ class LouisHelperPatch:
 		self._originals = {name: getattr(module, name) for name in PATCHED_NAMES}
 		for name in PATCHED_NAMES:
 			setattr(module, name, getattr(self, name))
+		self._installed = True
 
 	def uninstall(self, module: Any) -> None:
 		"""Restore the functions captured by :meth:`install`, unless someone else replaced them since.
 
+		Calls that still reach this patch through such a replacement go to the captured functions.
+
 		:param module: The module :meth:`install` patched.
 		"""
-		for name, original in self._originals.items():
-			if getattr(getattr(module, name), "__self__", None) is self:
-				setattr(module, name, original)
-			else:
-				log.warning(
-					f"{name} was replaced by something else after this add-on patched it; leaving it alone",
-				)
-		self._originals = {}
+		if self._installed:
+			self._installed = False
+			for name, original in self._originals.items():
+				if getattr(getattr(module, name), "__self__", None) is self:
+					setattr(module, name, original)
+				else:
+					log.warning(
+						f"{name} was replaced by something else after this add-on patched it; "
+						"leaving it alone",
+					)
 		self.clearCache()
 
 	def clearCache(self) -> None:

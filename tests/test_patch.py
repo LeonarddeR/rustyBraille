@@ -48,6 +48,7 @@ class TestFallback(unittest.TestCase):
 		log.records.clear()
 		self.compile = mock.Mock(return_value="translator")
 		self.louisPatch = patch.LouisHelperPatch(self.compile)
+		self.louisPatch.install(makeModule())
 
 	def test_success_uses_work_result(self):
 		self.assertEqual(self.louisPatch._run(["a.ctb"], False, work, fallback), "louis-rs via translator")
@@ -62,19 +63,30 @@ class TestFallback(unittest.TestCase):
 			[mock.call(("a.ctb",), False), mock.call(("a.ctb",), True)],
 		)
 
-	def test_table_parse_error_falls_back_logs_once_and_is_not_compiled_again(self):
-		self.compile.side_effect = louis_py.TableParseError("bad table")
-		for _ in range(2):
-			self.assertEqual(self.louisPatch._run(["a.ctb"], False, work, fallback), "liblouis")
-		self.assertEqual([level for level, _ in log.records], ["error"])
-		self.assertEqual(self.compile.call_count, 1)
+	def test_compile_failure_falls_back_logs_once_and_is_not_compiled_again(self):
+		failures = [
+			(louis_py.TableParseError("bad table"), "error"),
+			(louis_py.TableCompileError("line 3: base character 'a' of 'A' not defined"), "error"),
+			(LookupError("no such table"), "exception"),
+			(KeyError("bug"), "exception"),
+			(RuntimeError("boom"), "exception"),
+			(PanicException("boom"), "exception"),
+		]
+		for exc, level in failures:
+			with self.subTest(exc=exc):
+				log.records.clear()
+				compile = mock.Mock(side_effect=exc)
+				louisPatch = patch.LouisHelperPatch(compile)
+				louisPatch.install(makeModule())
+				for _ in range(2):
+					self.assertEqual(louisPatch._run(["a.ctb"], False, work, fallback), "liblouis")
+				self.assertEqual([lvl for lvl, _ in log.records], [level])
+				self.assertEqual(compile.call_count, 1)
 
-	def test_table_compile_error_falls_back_logs_once_and_is_not_compiled_again(self):
-		self.compile.side_effect = louis_py.TableCompileError("line 3: base character 'a' of 'A' not defined")
-		for _ in range(2):
-			self.assertEqual(self.louisPatch._run(["a.ctb"], False, work, fallback), "liblouis")
-		self.assertEqual([level for level, _ in log.records], ["error"])
-		self.assertEqual(self.compile.call_count, 1)
+	def test_keyboard_interrupt_while_compiling_propagates(self):
+		self.compile.side_effect = KeyboardInterrupt
+		with self.assertRaises(KeyboardInterrupt):
+			self.louisPatch._run(["a.ctb"], False, work, fallback)
 
 	def test_each_table_error_is_logged_once(self):
 		exc = louis_py.TableParseError("first problem (and 1 more)")
@@ -91,19 +103,20 @@ class TestFallback(unittest.TestCase):
 		self.louisPatch._run(["a.ctb"], True, work, fallback)
 		self.assertEqual(len(log.recordsAt("error")), 2)
 
-	def test_unresolvable_table_falls_back_logs_once_and_is_not_resolved_again(self):
-		self.compile.side_effect = LookupError("no such table")
-		for _ in range(2):
-			self.assertEqual(self.louisPatch._run(["missing.ctb"], False, work, fallback), "liblouis")
-		self.assertEqual(len(log.recordsAt("error")), 1)
-		self.assertEqual(self.compile.call_count, 1)
+	def test_cached_translator_is_read_in_one_step(self):
+		class ClearedOnMembershipTest(dict):
+			def __contains__(self, key: object) -> bool:
+				found = super().__contains__(key)
+				self.clear()
+				return found
 
-	def test_unexpected_compile_error_falls_back_and_is_compiled_again(self):
-		self.compile.side_effect = RuntimeError("boom")
+		self.louisPatch._translators = ClearedOnMembershipTest()
 		for _ in range(2):
-			self.assertEqual(self.louisPatch._run(["a.ctb"], False, work, fallback), "liblouis")
-		self.assertEqual(len(log.recordsAt("exception")), 1)
-		self.assertEqual(self.compile.call_count, 2)
+			self.assertEqual(
+				self.louisPatch._run(["a.ctb"], False, work, fallback),
+				"louis-rs via translator",
+			)
+		self.assertEqual(log.records, [])
 
 	def test_failing_translation_falls_back_and_logs_once(self):
 		def failing(compiled: object) -> str:
@@ -191,11 +204,20 @@ class TestTranslate(PatchTestCase):
 		self.assertEqual(kwargs["emphasis"], [("italic", 0, 1)])
 		self.assertEqual(kwargs["cursorPos"], 1)
 
+	def test_typeform_follows_its_characters_when_null_characters_are_stripped(self):
+		spy = self.enterContext(
+			mock.patch.object(translator, "translateText", return_value=([], [], [], None)),
+		)
+		bold = louisHelper.Typeform.BOLD
+		self.module.translate(["mini.ctb"], "a\0bc", typeform=[0, 0, bold, 0])
+		self.assertEqual(spy.call_args.kwargs["emphasis"], [("bold", 1, 2)])
+
 	def test_broken_table_falls_back_with_untouched_arguments(self):
 		mode = louisHelper.TranslationMode.COMPBRL_AT_CURSOR
-		result = self.module.translate(["broken.ctb"], "a\0b", typeform=None, cursorPos=1, mode=mode)
+		typeform = [0, 0, louisHelper.Typeform.BOLD]
+		result = self.module.translate(["broken.ctb"], "a\0b", typeform=typeform, cursorPos=1, mode=mode)
 		self.assertEqual(result, ("original",))
-		self.originalTranslate.assert_called_once_with(["broken.ctb"], "a\0b", None, 1, mode)
+		self.originalTranslate.assert_called_once_with(["broken.ctb"], "a\0b", typeform, 1, mode)
 
 
 class TestBackTranslate(PatchTestCase):
@@ -226,7 +248,8 @@ class TestBackTranslate(PatchTestCase):
 class TestInstall(unittest.TestCase):
 	def setUp(self):
 		log.records.clear()
-		self.louisPatch = patch.LouisHelperPatch(mock.Mock())
+		self.compile = mock.Mock()
+		self.louisPatch = patch.LouisHelperPatch(self.compile)
 		self.module = makeModule()
 		self.originalTranslate = self.module.translate
 		self.originalBackTranslate = self.module.backTranslate
@@ -262,6 +285,26 @@ class TestInstall(unittest.TestCase):
 		self.assertIs(self.module.translate, foreign)
 		self.assertIs(self.module.backTranslate, self.originalBackTranslate)
 		self.assertEqual(len(log.recordsAt("warning")), 1)
+
+	def test_calls_through_a_later_wrapper_reach_the_originals_after_uninstall(self):
+		self.louisPatch.install(self.module)
+		patchedTranslate = self.module.translate
+		patchedBackTranslate = self.module.backTranslate
+		self.module.translate = lambda *args: patchedTranslate(*args)
+		self.module.backTranslate = lambda *args: patchedBackTranslate(*args)
+		self.louisPatch.uninstall(self.module)
+		self.assertEqual(self.module.translate(["mini.ctb"], "abc"), ("original",))
+		self.assertEqual(self.module.backTranslate(["mini.ctb"], [1]), "original")
+		self.originalTranslate.assert_called_once_with(["mini.ctb"], "abc", None, None, 0)
+		self.originalBackTranslate.assert_called_once_with(["mini.ctb"], [1], 0)
+		self.compile.assert_not_called()
+
+	def test_second_uninstall_changes_nothing_and_does_not_warn(self):
+		self.louisPatch.install(self.module)
+		self.louisPatch.uninstall(self.module)
+		self.louisPatch.uninstall(self.module)
+		self.assertIs(self.module.translate, self.originalTranslate)
+		self.assertEqual(log.recordsAt("warning"), [])
 
 	def test_uninstall_without_install_leaves_the_module_alone(self):
 		self.louisPatch.uninstall(self.module)

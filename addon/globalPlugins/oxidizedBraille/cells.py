@@ -9,32 +9,18 @@ from __future__ import annotations
 from collections.abc import Iterable, Mapping, Sequence
 from itertools import groupby
 
-from .louis_py import EmphasisSpan
+from .louis_py import EmphasisSpan, TranslationMode
 
 UNICODE_BRAILLE_START = 0x2800
-UNICODE_BRAILLE_END = 0x28FF
-UNDEFINED_CELL = 0xFF
-"""Cell substituted for output characters outside the Unicode braille block."""
-
-
-def isUnicodeBraille(char: str) -> bool:
-	"""Whether a character is in the Unicode braille block.
-
-	:param char: A single character.
-	"""
-	return UNICODE_BRAILLE_START <= ord(char) <= UNICODE_BRAILLE_END
 
 
 def unicodeToCells(braille: str) -> list[int]:
-	"""Map every character to a cell, so the result is index-aligned with the input.
+	"""Convert louis-rs output to cells, without virtual dots.
 
-	:param braille: Text as louis-rs outputs it, normally Unicode braille.
-	:return: One cell per character; a character outside the braille block
-		becomes :data:`UNDEFINED_CELL`.
+	:param braille: Text as louis-rs outputs it.
+	:return: One cell per character.
 	"""
-	return [
-		ord(char) - UNICODE_BRAILLE_START if isUnicodeBraille(char) else UNDEFINED_CELL for char in braille
-	]
+	return [ord(char) & 0xFF for char in braille]
 
 
 def cellsToUnicode(cells: Iterable[int]) -> str:
@@ -46,17 +32,17 @@ def cellsToUnicode(cells: Iterable[int]) -> str:
 	return "".join(chr(UNICODE_BRAILLE_START + (cell & 0xFF)) for cell in cells)
 
 
-def mapFlags(value: int, mapping: Mapping[int, int]) -> int:
-	"""Translate the bits of ``value`` through ``mapping``; bits without a mapping are dropped.
+def mapModes(value: int, mapping: Mapping[int, TranslationMode]) -> TranslationMode:
+	"""Translate NVDA's mode bits ``value`` into louis-py modes; bits without a mapping are dropped.
 
-	:param value: Bit flags to translate.
-	:param mapping: Source bits to the target bits they stand for.
-	:return: The target bits of every source bit set in ``value``.
+	:param value: NVDA translation mode bits.
+	:param mapping: NVDA mode bits and the louis-py modes they stand for.
+	:return: The louis-py modes of every bit set in ``value``.
 	"""
-	result = 0
-	for sourceBit, targetBit in mapping.items():
-		if value & sourceBit:
-			result |= targetBit
+	result = TranslationMode(0)
+	for bit, mode in mapping.items():
+		if value & bit:
+			result |= mode
 	return result
 
 

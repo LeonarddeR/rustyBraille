@@ -14,7 +14,6 @@ from pathlib import Path
 from unittest import mock
 
 from globalPlugins.oxidizedBraille import louis_py, translator
-from logHandler import log
 
 from tests._stubs import TABLES_DIR
 
@@ -22,7 +21,9 @@ TABLES = str(TABLES_DIR)
 MINI = str(TABLES_DIR / "mini.ctb")
 INCLUDE = str(TABLES_DIR / "include.ctb")
 BROKEN = str(TABLES_DIR / "broken.ctb")
+VIRTUAL = str(TABLES_DIR / "virtual.ctb")
 BOGUS_DIR = "C:/does-not-exist"
+NO_MODE = louis_py.TranslationMode(0)
 
 
 class TestCompileTranslator(unittest.TestCase):
@@ -107,11 +108,10 @@ def fakeTranslator(result: FakeResult) -> mock.Mock:
 
 class TestTranslateText(unittest.TestCase):
 	def setUp(self):
-		log.records.clear()
 		self.mini = translator.compileTranslator([MINI], False, TABLES)
 
 	def translate(self, text: str, cursorPos: int | None = None):
-		return translator.translateText(self.mini, text, mode=0, emphasis=[], cursorPos=cursorPos)
+		return translator.translateText(self.mini, text, mode=NO_MODE, emphasis=[], cursorPos=cursorPos)
 
 	def test_returns_cells_positions_and_cursor(self):
 		self.assertEqual(self.translate("abc", cursorPos=1), ([1, 3, 9], [0, 1, 2], [0, 1, 2], 1))
@@ -134,11 +134,10 @@ class TestTranslateText(unittest.TestCase):
 		self.assertEqual(len(brailleToRawPos), len(cells))
 		self.assertEqual(len(rawToBraillePos), 3)
 
-	def test_non_braille_output_becomes_full_cells_and_is_logged(self):
-		fake = fakeTranslator(FakeResult("\u2801x", [0, 1], [0, 1], None))
-		cells, _, _, _ = translator.translateText(fake, "ab", mode=0, emphasis=[], cursorPos=None)
-		self.assertEqual(cells, [1, 0xFF])
-		self.assertEqual(len(log.recordsAt("debug")), 1)
+	def test_virtual_dots_are_dropped(self):
+		virtual = translator.compileTranslator([VIRTUAL], False, TABLES)
+		cells, _, _, _ = translator.translateText(virtual, "a1", mode=NO_MODE, emphasis=[], cursorPos=None)
+		self.assertEqual(cells, [1, 1])
 
 
 class TestBackTranslateCells(unittest.TestCase):
@@ -146,16 +145,16 @@ class TestBackTranslateCells(unittest.TestCase):
 		self.mini = translator.compileTranslator([MINI], True, TABLES)
 
 	def test_cells_are_back_translated(self):
-		self.assertEqual(translator.backTranslateCells(self.mini, [1, 3], mode=0), "ab")
+		self.assertEqual(translator.backTranslateCells(self.mini, [1, 3], mode=NO_MODE), "ab")
 
 	def test_undefined_cells_are_dropped(self):
-		self.assertEqual(translator.backTranslateCells(self.mini, [1, 0x3F, 3], mode=0), "ab")
+		self.assertEqual(translator.backTranslateCells(self.mini, [1, 0x3F, 3], mode=NO_MODE), "ab")
 
 	def test_cells_are_masked_to_a_byte(self):
-		self.assertEqual(translator.backTranslateCells(self.mini, [0x101, 0x103], mode=0), "ab")
+		self.assertEqual(translator.backTranslateCells(self.mini, [0x101, 0x103], mode=NO_MODE), "ab")
 
 	def test_no_cells_give_empty_string(self):
-		self.assertEqual(translator.backTranslateCells(self.mini, [], mode=0), "")
+		self.assertEqual(translator.backTranslateCells(self.mini, [], mode=NO_MODE), "")
 
 	def test_no_undefined_is_added_to_the_mode(self):
 		fake = fakeTranslator(FakeResult("a", [], [], None))

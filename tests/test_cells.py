@@ -9,7 +9,9 @@ from __future__ import annotations
 import unittest
 
 import louisHelper
-from globalPlugins.oxidizedBraille import cells
+from globalPlugins.oxidizedBraille import cells, louis_py
+
+Mode = louis_py.TranslationMode
 
 CLASSES = {1: "italic", 4: "bold", 2: "underline"}
 
@@ -18,8 +20,8 @@ class TestUnicodeToCells(unittest.TestCase):
 	def test_braille_characters_become_dot_masks(self):
 		self.assertEqual(cells.unicodeToCells("\u2801\u2803\u2809"), [1, 3, 9])
 
-	def test_non_braille_character_becomes_undefined_cell(self):
-		self.assertEqual(cells.unicodeToCells("\u2801x"), [1, cells.UNDEFINED_CELL])
+	def test_virtual_dots_are_dropped(self):
+		self.assertEqual(cells.unicodeToCells("\U000f0101\U000f0211"), [0x01, 0x11])
 
 
 class TestCellsToUnicode(unittest.TestCase):
@@ -27,17 +29,17 @@ class TestCellsToUnicode(unittest.TestCase):
 		self.assertEqual(cells.cellsToUnicode([1, 3]), "\u2801\u2803")
 
 
-class TestMapFlags(unittest.TestCase):
-	MAPPING = {2: 1 << 1, 256: 1 << 6}
+class TestMapModes(unittest.TestCase):
+	MAPPING = {2: Mode.COMPBRL_AT_CURSOR, 256: Mode.PARTIAL_TRANS}
 
 	def test_known_bits_are_mapped(self):
-		self.assertEqual(cells.mapFlags(2 | 256, self.MAPPING), (1 << 1) | (1 << 6))
+		self.assertEqual(cells.mapModes(2 | 256, self.MAPPING), Mode.COMPBRL_AT_CURSOR | Mode.PARTIAL_TRANS)
 
 	def test_unknown_bits_are_dropped(self):
-		self.assertEqual(cells.mapFlags(4, self.MAPPING), 0)
+		self.assertEqual(cells.mapModes(4, self.MAPPING), Mode(0))
 
-	def test_zero_maps_to_zero(self):
-		self.assertEqual(cells.mapFlags(0, self.MAPPING), 0)
+	def test_zero_maps_to_no_modes(self):
+		self.assertEqual(cells.mapModes(0, self.MAPPING), Mode(0))
 
 
 class TestTypeformToEmphasis(unittest.TestCase):

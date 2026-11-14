@@ -9,10 +9,8 @@ from __future__ import annotations
 import os
 from collections.abc import Sequence
 
-from logHandler import log
-
 from . import louis_py
-from .cells import cellsToUnicode, isUnicodeBraille, unicodeToCells
+from .cells import cellsToUnicode, unicodeToCells
 
 
 def compileTranslator(tables: Sequence[str], backward: bool, builtinDir: str) -> louis_py.Translator:
@@ -36,7 +34,7 @@ def translateText(
 	compiled: louis_py.Translator,
 	text: str,
 	*,
-	mode: int,
+	mode: louis_py.TranslationMode,
 	emphasis: Sequence[louis_py.EmphasisSpan],
 	cursorPos: int | None,
 ) -> tuple[list[int], list[int], list[int], int | None]:
@@ -44,7 +42,7 @@ def translateText(
 
 	:param compiled: A forward translator.
 	:param text: The text to translate.
-	:param mode: louis-rs translation mode bits.
+	:param mode: The louis-py translation modes.
 	:param emphasis: Emphasis spans for the formatted parts of ``text``.
 	:param cursorPos: The cursor position in ``text``, or ``None`` for no cursor.
 		A negative position counts as the start.
@@ -57,21 +55,25 @@ def translateText(
 		emphasis=list(emphasis),
 		cursor_position=None if cursorPos is None else max(cursorPos, 0),
 	)
-	cells = unicodeToCells(result.output)
-	nonBraille = [f"U+{ord(char):04X}" for char in result.output if not isUnicodeBraille(char)]
-	if nonBraille:
-		log.debug(
-			f"louis-rs produced characters outside the braille block, shown as full cells: {nonBraille}",
-		)
-	return cells, result.input_positions, result.output_positions, result.cursor_position
+	return (
+		unicodeToCells(result.output),
+		result.input_positions,
+		result.output_positions,
+		result.cursor_position,
+	)
 
 
-def backTranslateCells(compiled: louis_py.Translator, cells: Sequence[int], *, mode: int) -> str:
+def backTranslateCells(
+	compiled: louis_py.Translator,
+	cells: Sequence[int],
+	*,
+	mode: louis_py.TranslationMode,
+) -> str:
 	"""Back-translate cells the way ``louisHelper.backTranslate`` does, dropping undefined cells.
 
 	:param compiled: A backward translator.
 	:param cells: The braille cells to back-translate; every cell is masked to a byte.
-	:param mode: louis-rs translation mode bits; ``NO_UNDEFINED`` is always added.
+	:param mode: The louis-py translation modes; ``NO_UNDEFINED`` is always added.
 	:return: The back-translated text.
 	"""
 	result = compiled.translate_with_options(

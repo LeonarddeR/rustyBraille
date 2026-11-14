@@ -14,18 +14,18 @@ import louisHelper
 from logHandler import log
 
 from . import louis_py, translator
-from .cells import mapFlags, typeformToEmphasis
+from .cells import mapModes, typeformToEmphasis
 
 PATCHED_NAMES = ("translate", "backTranslate")
 
 TableKey = tuple[tuple[str, ...], bool]
 """Table names as NVDA passes them, plus whether the direction is backward."""
 
-MODE_MAP: Mapping[int, int] = {
+MODE_MAP: Mapping[int, louis_py.TranslationMode] = {
 	louisHelper.TranslationMode.COMPBRL_AT_CURSOR: louis_py.TranslationMode.COMPBRL_AT_CURSOR,
 	louisHelper.TranslationMode.PARTIAL_TRANS: louis_py.TranslationMode.PARTIAL_TRANS,
 }
-"""NVDA translation mode bits and the louis-rs mode bits they map to."""
+"""NVDA translation mode bits and the louis-py modes they map to."""
 
 TYPEFORM_CLASSES: Mapping[int, str] = {
 	int(louisHelper.Typeform.ITALIC): "italic",
@@ -143,7 +143,7 @@ class LouisHelperPatch:
 			work=lambda compiled: translator.translateText(
 				compiled,
 				text,
-				mode=mapFlags(mode, MODE_MAP),
+				mode=mapModes(mode, MODE_MAP),
 				emphasis=typeformToEmphasis(typeform, TYPEFORM_CLASSES, len(text)),
 				cursorPos=cursorPos,
 			),
@@ -161,7 +161,7 @@ class LouisHelperPatch:
 			work=lambda compiled: translator.backTranslateCells(
 				compiled,
 				cells,
-				mode=mapFlags(mode, MODE_MAP),
+				mode=mapModes(mode, MODE_MAP),
 			),
 			fallback=lambda: self._originals["backTranslate"](tableList, cells, mode),
 		)

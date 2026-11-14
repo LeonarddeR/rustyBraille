@@ -122,8 +122,8 @@ class TestTranslateText(unittest.TestCase):
 	def test_cursor_past_end_maps_to_end_of_cells(self):
 		self.assertEqual(self.translate("abc", cursorPos=10)[3], 3)
 
-	def test_negative_cursor_is_clamped_to_start(self):
-		self.assertEqual(self.translate("abc", cursorPos=-1)[3], 0)
+	def test_negative_cursor_means_no_cursor_and_comes_back_unchanged(self):
+		self.assertEqual(self.translate("abc", cursorPos=-1)[3], -1)
 
 	def test_empty_text_gives_empty_lists(self):
 		self.assertEqual(self.translate("", cursorPos=0), ([], [], [], 0))

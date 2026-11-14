@@ -44,22 +44,23 @@ def translateText(
 	:param text: The text to translate.
 	:param mode: The louis-py translation modes.
 	:param emphasis: Emphasis spans for the formatted parts of ``text``.
-	:param cursorPos: The cursor position in ``text``, or ``None`` for no cursor.
-		A negative position counts as the start.
+	:param cursorPos: The cursor position in ``text``, or ``None`` or a negative number for no cursor,
+		as in liblouis.
 	:return: The cells, the input position of every cell, the cell position of every character,
-		and the cursor position in the cells, which is ``None`` when ``cursorPos`` is ``None``.
+		and the cursor position in the cells, which is ``cursorPos`` unchanged when there is no cursor.
 	"""
+	noCursor = cursorPos is None or cursorPos < 0
 	result = compiled.translate_with_options(
 		text,
 		mode=mode,
 		emphasis=list(emphasis),
-		cursor_position=None if cursorPos is None else max(cursorPos, 0),
+		cursor_position=None if noCursor else cursorPos,
 	)
 	return (
 		unicodeToCells(result.output),
 		list(result.input_positions),
 		list(result.output_positions),
-		result.cursor_position,
+		cursorPos if noCursor else result.cursor_position,
 	)
 
 

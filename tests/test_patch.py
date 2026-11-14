@@ -162,6 +162,11 @@ class TestTranslate(PatchTestCase):
 		result = self.module.translate(["contracted.ctb"], "abc abc", cursorPos=5, mode=mode)
 		self.assertEqual(result[0], cells.unicodeToCells("⠿⠀⠂⠆⠒"))
 
+	def test_negative_cursor_expands_no_word(self):
+		mode = louisHelper.TranslationMode.COMPBRL_AT_CURSOR
+		result = self.module.translate(["contracted.ctb"], "abc abc", cursorPos=-1, mode=mode)
+		self.assertEqual(result[0], cells.unicodeToCells("⠿⠀⠿"))
+
 	def test_without_expand_at_cursor_the_cursor_word_stays_contracted(self):
 		result = self.module.translate(["contracted.ctb"], "abc abc", cursorPos=5)
 		self.assertEqual(result[0], cells.unicodeToCells("⠿⠀⠿"))

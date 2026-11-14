@@ -1,4 +1,4 @@
-# Oxidized Braille Translation: NVDA add-on
+# Rusty Braille: NVDA add-on
 # Copyright 2026 Leonard de Ruijter <alderuijter@gmail.com>
 # License: GNU General Public License version 2.0 or later
 
@@ -11,8 +11,8 @@ from unittest import mock
 
 import config
 import louisHelper
-from globalPlugins import oxidizedBraille
-from globalPlugins.oxidizedBraille import patch
+from globalPlugins import rustyBraille
+from globalPlugins.rustyBraille import patch
 from logHandler import log
 
 
@@ -21,7 +21,7 @@ class TestGlobalPlugin(unittest.TestCase):
 		log.records.clear()
 		self.originalTranslate = louisHelper.translate
 		self.originalBackTranslate = louisHelper.backTranslate
-		self.plugin = oxidizedBraille.GlobalPlugin()
+		self.plugin = rustyBraille.GlobalPlugin()
 		self.addCleanup(self.plugin.terminate)
 
 	def test_init_patches_louis_helper(self):
@@ -32,7 +32,12 @@ class TestGlobalPlugin(unittest.TestCase):
 		self.assertEqual(config.post_configReset.handlers, [self.plugin._patch.clearCache])
 
 	def test_init_logs_the_engine_switch(self):
-		self.assertTrue(any("louis-rs" in message for message in log.recordsAt("info")))
+		self.assertTrue(
+			any(
+				message.startswith("Rusty Braille ") and "louis-rs" in message
+				for message in log.recordsAt("info")
+			),
+		)
 
 	def test_terminate_restores_louis_helper_and_unregisters(self):
 		self.plugin.terminate()
@@ -58,7 +63,7 @@ class TestInstallFailure(unittest.TestCase):
 		self.enterContext(
 			mock.patch.object(patch.LouisHelperPatch, "install", side_effect=RuntimeError("no")),
 		)
-		plugin = oxidizedBraille.GlobalPlugin()
+		plugin = rustyBraille.GlobalPlugin()
 		self.assertIs(louisHelper.translate, originalTranslate)
 		self.assertEqual(len(log.recordsAt("exception")), 1)
 		plugin.terminate()

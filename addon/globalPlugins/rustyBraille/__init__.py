@@ -1,4 +1,4 @@
-# Oxidized Braille Translation: NVDA add-on
+# Rusty Braille: NVDA add-on
 # Copyright 2026 Leonard de Ruijter <alderuijter@gmail.com>
 # License: GNU General Public License version 2.0 or later
 
@@ -30,7 +30,7 @@ class GlobalPlugin(globalPluginHandler.GlobalPlugin):
 		self._patch = louisPatch
 		config.post_configReset.register(louisPatch.clearCache)
 		log.info(
-			f"Oxidized Braille Translation {addon.version}: louisHelper.translate and backTranslate "
+			f"Rusty Braille {addon.version}: louisHelper.translate and backTranslate "
 			f"now use louis-rs (louis_py {louis_py.__version__})",
 		)
 

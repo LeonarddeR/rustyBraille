@@ -1,7 +1,7 @@
-# Oxidized Braille Translation
+# Rusty Braille
 
 * Author: Leonard de Ruijter
-* Download [latest release](https://github.com/LeonarddeR/oxidizedBraille/releases/latest)
+* Download [latest release](https://github.com/LeonarddeR/rustyBraille/releases/latest)
 * NVDA compatibility: 2026.3 and later
 
 This experimental add-on makes NVDA translate braille with [louis-rs](https://github.com/liblouis/louis-rs), a re-implementation of the liblouis braille translator in Rust, through the [louis-py](https://github.com/liblouis/louis-py) Python bindings.
@@ -20,7 +20,7 @@ If a single translation fails, that translation falls back to liblouis as well.
 
 ## Checking which engine is in use
 
-After starting NVDA, the log (NVDA+F1) contains a line starting with "Oxidized Braille Translation" that names the louis-py version in use.
+After starting NVDA, the log (NVDA+F1) contains a line starting with "Rusty Braille" that names the louis-py version in use.
 A line starting with "louis-rs cannot use tables" means the selected table is handled by liblouis.
 
 From the NVDA Python console (NVDA+control+Z) you can compare both engines directly:

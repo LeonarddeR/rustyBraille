@@ -1,4 +1,4 @@
-# Oxidized Braille Translation: NVDA add-on
+# Rusty Braille: NVDA add-on
 # Copyright 2026 Leonard de Ruijter <alderuijter@gmail.com>
 # License: GNU General Public License version 2.0 or later
 
@@ -9,7 +9,7 @@ from __future__ import annotations
 import unittest
 
 import louisHelper
-from globalPlugins.oxidizedBraille import cells, louis_py
+from globalPlugins.rustyBraille import cells, louis_py
 
 Mode = louis_py.TranslationMode
 

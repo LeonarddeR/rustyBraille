@@ -1,10 +1,10 @@
-# Oxidized Braille Translation: NVDA add-on
+# Rusty Braille: NVDA add-on
 # Copyright 2026 Leonard de Ruijter <alderuijter@gmail.com>
 # License: GNU General Public License version 2.0 or later
 
 """Stand-ins for NVDA runtime modules, installed into ``sys.modules``.
 
-Only what ``globalPlugins.oxidizedBraille`` imports is stubbed: ``logHandler``,
+Only what ``globalPlugins.rustyBraille`` imports is stubbed: ``logHandler``,
 ``globalPluginHandler``, ``addonHandler``, ``louisHelper``, ``brailleTables`` and ``config``.
 Table names resolve against ``tests/tables``.
 """

@@ -1,13 +1,13 @@
-# Oxidized Braille Translation: NVDA add-on
+# Rusty Braille: NVDA add-on
 # Copyright 2026 Leonard de Ruijter <alderuijter@gmail.com>
 # License: GNU General Public License version 2.0 or later
 
 """Unit test package bootstrap.
 
-Importing this package prepares an environment in which ``globalPlugins.oxidizedBraille``
+Importing this package prepares an environment in which ``globalPlugins.rustyBraille``
 can be imported without a running NVDA instance:
 
-* ``addon`` is put on ``sys.path`` so the plugin resolves as ``globalPlugins.oxidizedBraille``.
+* ``addon`` is put on ``sys.path`` so the plugin resolves as ``globalPlugins.rustyBraille``.
 * Light-weight stand-ins for the NVDA modules the plugin imports are installed into
   ``sys.modules`` (see :mod:`tests._stubs`) before anything imports them.
 """

@@ -1,4 +1,4 @@
-# Oxidized Braille Translation: NVDA add-on
+# Rusty Braille: NVDA add-on
 # Copyright 2026 Leonard de Ruijter <alderuijter@gmail.com>
 # License: GNU General Public License version 2.0 or later
 
@@ -13,7 +13,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from unittest import mock
 
-from globalPlugins.oxidizedBraille import louis_py, translator
+from globalPlugins.rustyBraille import louis_py, translator
 
 from tests._stubs import TABLES_DIR
 

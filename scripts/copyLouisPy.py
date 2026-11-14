@@ -11,7 +11,7 @@ from importlib.metadata import distribution
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
-TARGET = REPO_ROOT / "addon" / "globalPlugins" / "oxidizedBraille" / "louis_py"
+TARGET = REPO_ROOT / "addon" / "globalPlugins" / "rustyBraille" / "louis_py"
 SKIPPED_SUFFIXES = (".pdb", ".pyc")
 
 

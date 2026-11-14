@@ -18,27 +18,27 @@ from site_scons.site_tools.NVDATool.utils import _
 # Add-on information variables
 addon_info = AddonInfo(
 	# add-on Name/identifier, internal for NVDA
-	addon_name="oxidizedBraille",
+	addon_name="rustyBraille",
 	# Add-on summary/title, usually the user visible name of the add-on
 	# Translators: Summary/title for this add-on
 	# to be shown on installation and add-on information found in add-on store
-	addon_summary=_("Oxidized Braille Translation"),
+	addon_summary=_("Rusty Braille"),
 	# Add-on description
 	# Translators: Long description to be shown for this add-on on add-on information from add-on store
 	addon_description=_(
 		"Braille translation powered by louis-rs, a Rust re-implementation of liblouis. Experimental.",
 	),
 	# version
-	addon_version="0.1.1",
+	addon_version="0.1.0",
 	# Brief changelog for this version
 	# Translators: what's new content for the add-on version to be shown in the add-on store
 	addon_changelog=_("Initial experimental release."),
 	# Author(s)
 	addon_author="Leonard de Ruijter <alderuijter@gmail.com>",
 	# URL for the add-on documentation support
-	addon_url="https://github.com/LeonarddeR/oxidizedBraille",
+	addon_url="https://github.com/LeonarddeR/rustyBraille",
 	# URL for the add-on repository where the source code can be found
-	addon_sourceURL="https://github.com/LeonarddeR/oxidizedBraille",
+	addon_sourceURL="https://github.com/LeonarddeR/rustyBraille",
 	# Documentation file name
 	addon_docFileName="readme.html",
 	# Minimum NVDA version supported (e.g. "2019.3.0", minor version is optional)
@@ -58,7 +58,7 @@ addon_info = AddonInfo(
 # Define the python files that are the sources of your add-on.
 # A single-level glob on purpose: the vendored louis_py subpackage is shipped by the bundler
 # but must not be handed to gettext.
-pythonSources: list[str] = ["addon/globalPlugins/oxidizedBraille/*.py"]
+pythonSources: list[str] = ["addon/globalPlugins/rustyBraille/*.py"]
 
 # Files that contain strings for translation. Usually your python sources
 i18nSources: list[str] = pythonSources + ["buildVars.py"]

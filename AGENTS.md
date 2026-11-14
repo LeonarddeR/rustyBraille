@@ -4,7 +4,7 @@ This file provides guidance to coding agents when working with code in this repo
 
 ## Project
 
-Oxidized Braille Translation: experimental NVDA add-on that routes NVDA's braille translation through louis-rs (a Rust re-implementation of liblouis) via the louis-py bindings, by replacing `louisHelper.translate` and `louisHelper.backTranslate` at runtime. liblouis stays loaded as the fallback. Min NVDA 2026.3, Python 3.13, Windows x64 only.
+Rusty Braille: experimental NVDA add-on that routes NVDA's braille translation through louis-rs (a Rust re-implementation of liblouis) via the louis-py bindings, by replacing `louisHelper.translate` and `louisHelper.backTranslate` at runtime. liblouis stays loaded as the fallback. Min NVDA 2026.3, Python 3.13, Windows x64 only.
 
 Sibling source repos (paths relative to this repo):
 
@@ -34,7 +34,7 @@ Tests are `unittest`; `tests/__init__.py` puts `addon/` on `sys.path` and `tests
 
 ## Layout
 
-Everything lives in one package, `addon/globalPlugins/oxidizedBraille/`:
+Everything lives in one package, `addon/globalPlugins/rustyBraille/`:
 
 * `__init__.py` — `GlobalPlugin`: installs a `LouisHelperPatch` on `louisHelper`, registers its `clearCache` with `config.post_configReset` and restores the originals on `terminate`.
 * `cells.py` — pure conversions: Unicode braille ↔ cell integers, NVDA mode bits → louis-py modes, typeform flags → `EmphasisSpan`s.

@@ -39,12 +39,20 @@ Everything lives in one package, `addon/globalPlugins/rustyBraille/`:
 * `__init__.py` — `GlobalPlugin`: installs a `LouisHelperPatch` on `louisHelper`, registers its `clearCache` with `config.post_configReset` and restores the originals on `terminate`.
 * `cells.py` — pure conversions: Unicode braille ↔ cell integers, NVDA mode bits → louis-py modes, typeform flags → `EmphasisSpan`s.
 * `translator.py` — `compileTranslator` (passes each table's directory plus NVDA's built-in table directory to louis-py as `search_path=`), `translateText`, `backTranslateCells`.
-* `patch.py` — `compileTables` (NVDA's `louisHelper._resolveTableInner` plus `brailleTables.TABLES_DIR`), `isRecoverable`, and `LouisHelperPatch`: the replacement `translate`/`backTranslate` with the NVDA→louis-rs mode and typeform maps, translators kept per table list and direction (a failed compile is logged once and kept as a failure), fallback to liblouis, `install`/`uninstall`.
+* `patch.py` — `compileTables` (NVDA's `louisHelper._resolveTableInner` plus `brailleTables.TABLES_DIR`), `isRecoverable`, and `LouisHelperPatch`: the replacement `translate`/`backTranslate` with the NVDA→louis-rs mode and typeform maps, translators kept per table list and direction (a failed compile is logged once and kept as a failure), fallback to liblouis, `install`/`uninstall` (after `uninstall`, calls that still reach the patch through another add-on's wrapper go to liblouis).
 * `louis_py/` — copied from the installed louis-py wheel by `scripts/copyLouisPy.py`; gitignored, never edit.
 
 ## louis-rs constraints the code works around
 
-At the vendored revision louis-rs looks tables and `include` lines up only in the directories louis-py is handed as `search_path=`. It applies the `COMPBRL_AT_CURSOR`, `PARTIAL_TRANS` and `NO_UNDEFINED` modes NVDA relies on, but writes undefined characters differently from liblouis. A cell with virtual dots (9 and A to F) comes out as U+F0000 plus the dot bits; `cells.unicodeToCells` drops the virtual dots. A table can fail to compile with `louis_py.TableCompileError` (a rule refers to something no rule defines, such as the base character of a `base` rule) as well as `TableParseError`; both derive from `louis_py.LouisError`, which the patch catches to fall back to liblouis. See the readme's "Known gaps" before changing behaviour here.
+At the vendored revision louis-rs looks tables and `include` lines up only in the directories louis-py is handed as `search_path=`, for includes at any depth. That differs from NVDA's resolver, which looks next to the including table first, and is by design: a table next to a custom table replaces a built-in include of the same name (see the readme's "Differences from liblouis").
+
+louis-rs applies the `COMPBRL_AT_CURSOR` and `PARTIAL_TRANS` modes NVDA relies on. `NO_UNDEFINED` is not fully applied ([louis-rs #35](https://github.com/liblouis/louis-rs/issues/35)): back-translating a cell that many NVDA tables do not define (ru, da, fi, hu and others) still puts Unicode braille into the text. The add-on deliberately does not strip it; the fix belongs in louis-rs. Undefined characters in forward translation also come out differently from liblouis.
+
+A cell with virtual dots (9 and A to F) comes out as U+F0000 plus the dot bits; `cells.unicodeToCells` drops the virtual dots.
+
+A table can fail to compile with `louis_py.TableCompileError` (a rule refers to something no rule defines, such as the base character of a `base` rule) as well as `TableParseError`; both derive from `louis_py.LouisError`. The patch falls back to liblouis on every compile failure it can recover from and remembers it until the next configuration reset. A `LouisError` is logged as one line with the table errors, anything else with a traceback.
+
+See the readme's "Known gaps" before changing behaviour here.
 
 ## Bundling louis_py
 

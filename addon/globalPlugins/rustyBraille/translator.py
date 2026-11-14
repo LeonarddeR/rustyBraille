@@ -57,8 +57,8 @@ def translateText(
 	)
 	return (
 		unicodeToCells(result.output),
-		result.input_positions,
-		result.output_positions,
+		list(result.input_positions),
+		list(result.output_positions),
 		result.cursor_position,
 	)
 

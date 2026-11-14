@@ -75,7 +75,7 @@ name = "louis-py"
 version = "0.1.0"
 source = { path = "wheels/louis_py-0.1.0-cp311-abi3-win_amd64.whl" }
 wheels = [
-    { filename = "louis_py-0.1.0-cp311-abi3-win_amd64.whl", hash = "sha256:565d35b11e4752113ecfe25e9574b6be849def3cde7c5fe0b30a6a2d96663dfd" },
+    { filename = "louis_py-0.1.0-cp311-abi3-win_amd64.whl", hash = "sha256:612b6a00a3024b0c5604257a28cceaa7f012107a55677655828e029c74c26b29" },
 ]
 
 [[package]]

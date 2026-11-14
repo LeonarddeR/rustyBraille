@@ -1,0 +1,13 @@
+# Files and directories ignored during template synchronization
+.addonmergeignore
+.gitattributes
+.gitignore
+buildVars.py
+.github/workflows/build_addon.yml
+prek.toml
+pyproject.toml
+uv.lock
+syncAddonTool
+templateDocs
+.github/PULL_REQUEST_TEMPLATE.md
+.github/PULL_REQUEST_TEMPLATE

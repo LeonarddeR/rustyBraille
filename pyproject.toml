@@ -58,6 +58,7 @@ lint = [
 # Type checking. ty resolves NVDA imports against a sibling ..\nvda\source checkout.
 typecheck = [
 	"ty==0.0.75",
+	"wxPython==4.3.2",
 ]
 dev = [
 	{ include-group = "addon" },

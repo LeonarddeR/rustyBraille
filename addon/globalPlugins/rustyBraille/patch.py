@@ -9,12 +9,17 @@ from __future__ import annotations
 from collections.abc import Callable, Mapping, Sequence
 from typing import Any
 
+import addonHandler
 import brailleTables
 import louisHelper
+import wx
+from gui.message import DialogType, MessageDialog
 from logHandler import log
 
 from . import louis_py, translator
 from .cells import mapModes, typeformToEmphasis
+
+addonHandler.initTranslation()
 
 PATCHED_NAMES = ("translate", "backTranslate")
 
@@ -48,6 +53,63 @@ def compileTables(tables: tuple[str, ...], backward: bool) -> louis_py.Translato
 	return translator.compileTranslator(paths, backward, brailleTables.TABLES_DIR)
 
 
+def showError(message: str) -> None:
+	"""Show ``message`` in a modal error dialog.
+
+	:param message: The text of the dialog.
+	"""
+	# Translators: Title of the dialog that reports a louis-rs failure.
+	MessageDialog(None, message, _("Rusty Braille"), DialogType.ERROR).ShowModal()  # ty: ignore[missing-argument]
+
+
+def compileFailureMessage(tables: Sequence[str], backward: bool) -> str:
+	"""The error dialog text for tables louis-rs cannot compile.
+
+	:param tables: Table names as NVDA passes them.
+	:param backward: Whether the tables back-translate braille input.
+	"""
+	if backward:
+		message = _(
+			# Translators: Reported when louis-rs cannot use the braille input tables.
+			# {tables} is a comma-separated list of table file names.
+			"louis-rs cannot use the braille tables {tables} for braille input. "
+			"liblouis translates with them until NVDA's configuration is reset or NVDA restarts. "
+			"The NVDA log has the details.",
+		)
+	else:
+		message = _(
+			# Translators: Reported when louis-rs cannot use the braille output tables.
+			# {tables} is a comma-separated list of table file names.
+			"louis-rs cannot use the braille tables {tables} for braille output. "
+			"liblouis translates with them until NVDA's configuration is reset or NVDA restarts. "
+			"The NVDA log has the details.",
+		)
+	return message.format(tables=", ".join(tables))
+
+
+def translationFailureMessage(tables: Sequence[str], backward: bool) -> str:
+	"""The error dialog text for a translation that failed in louis-rs.
+
+	:param tables: Table names as NVDA passes them.
+	:param backward: Whether the translation back-translated braille input.
+	"""
+	if backward:
+		message = _(
+			# Translators: Reported when louis-rs fails to translate braille input.
+			# {tables} is a comma-separated list of table file names.
+			"louis-rs failed to translate braille input with the braille tables {tables}. "
+			"liblouis translated it instead. The NVDA log has the details.",
+		)
+	else:
+		message = _(
+			# Translators: Reported when louis-rs fails to translate braille output.
+			# {tables} is a comma-separated list of table file names.
+			"louis-rs failed to translate braille output with the braille tables {tables}. "
+			"liblouis translated it instead. The NVDA log has the details.",
+		)
+	return message.format(tables=", ".join(tables))
+
+
 def isRecoverable(exc: BaseException) -> bool:
 	"""Whether a failure inside louis-rs may be handled by falling back to liblouis.
 
@@ -76,7 +138,7 @@ class LouisHelperPatch:
 
 		:param key: The table list and direction.
 		:return: The translator, or ``None`` when its tables cannot be compiled.
-			That is logged once and remembered until :meth:`clearCache`.
+			That is logged and shown in an error dialog once, and remembered until :meth:`clearCache`.
 		"""
 		try:
 			return self._translators[key]
@@ -97,6 +159,7 @@ class LouisHelperPatch:
 				log.error(f"{message} {'; '.join(reasons)}")
 			else:
 				log.exception(message)
+			wx.CallAfter(showError, compileFailureMessage(tables, backward))
 			compiled = None
 		self._translators[key] = compiled
 		return compiled
@@ -133,6 +196,7 @@ class LouisHelperPatch:
 					f"louis-rs {'backward' if backward else 'forward'} translation with {list(tableList)} "
 					"failed; falling back to liblouis for this call",
 				)
+				wx.CallAfter(showError, translationFailureMessage(tableList, backward))
 		return fallback()
 
 	def translate(

@@ -12,6 +12,7 @@ from unittest import mock
 
 import louisHelper
 from globalPlugins.rustyBraille import cells, louis_py, patch, translator
+from gui.message import DialogType
 from logHandler import log
 
 from tests._stubs import PanicException
@@ -43,9 +44,18 @@ class TestCompileTables(unittest.TestCase):
 			patch.compileTables(("missing.ctb",), False)
 
 
+class TestShowError(unittest.TestCase):
+	def test_builds_an_error_dialog_and_shows_it_modally(self):
+		dialog = self.enterContext(mock.patch.object(patch, "MessageDialog"))
+		patch.showError("message")
+		dialog.assert_called_once_with(None, "message", "Rusty Braille", DialogType.ERROR)
+		dialog.return_value.ShowModal.assert_called_once_with()
+
+
 class TestFallback(unittest.TestCase):
 	def setUp(self):
 		log.records.clear()
+		self.callAfter = self.enterContext(mock.patch.object(patch.wx, "CallAfter"))
 		self.compile = mock.Mock(return_value="translator")
 		self.louisPatch = patch.LouisHelperPatch(self.compile)
 		self.louisPatch.install(makeModule())
@@ -63,7 +73,7 @@ class TestFallback(unittest.TestCase):
 			[mock.call(("a.ctb",), False), mock.call(("a.ctb",), True)],
 		)
 
-	def test_compile_failure_falls_back_logs_once_and_is_not_compiled_again(self):
+	def test_compile_failure_falls_back_reports_once_and_is_not_compiled_again(self):
 		failures = [
 			(louis_py.TableParseError("bad table"), "error"),
 			(louis_py.TableCompileError("line 3: base character 'a' of 'A' not defined"), "error"),
@@ -75,18 +85,21 @@ class TestFallback(unittest.TestCase):
 		for exc, level in failures:
 			with self.subTest(exc=exc):
 				log.records.clear()
+				self.callAfter.reset_mock()
 				compile = mock.Mock(side_effect=exc)
 				louisPatch = patch.LouisHelperPatch(compile)
 				louisPatch.install(makeModule())
 				for _ in range(2):
 					self.assertEqual(louisPatch._run(["a.ctb"], False, work, fallback), "liblouis")
 				self.assertEqual([lvl for lvl, _ in log.records], [level])
+				self.assertEqual(self.callAfter.call_count, 1)
 				self.assertEqual(compile.call_count, 1)
 
 	def test_keyboard_interrupt_while_compiling_propagates(self):
 		self.compile.side_effect = KeyboardInterrupt
 		with self.assertRaises(KeyboardInterrupt):
 			self.louisPatch._run(["a.ctb"], False, work, fallback)
+		self.callAfter.assert_not_called()
 
 	def test_each_table_error_is_logged_once(self):
 		exc = louis_py.TableParseError("first problem (and 1 more)")
@@ -99,9 +112,26 @@ class TestFallback(unittest.TestCase):
 
 	def test_failure_is_reported_per_direction(self):
 		self.compile.side_effect = louis_py.TableParseError("bad table")
-		self.louisPatch._run(["a.ctb"], False, work, fallback)
-		self.louisPatch._run(["a.ctb"], True, work, fallback)
+		self.louisPatch._run(["a.ctb", "b.cti"], False, work, fallback)
+		self.louisPatch._run(["a.ctb", "b.cti"], True, work, fallback)
 		self.assertEqual(len(log.recordsAt("error")), 2)
+		self.assertEqual(
+			self.callAfter.call_args_list,
+			[
+				mock.call(
+					patch.showError,
+					"louis-rs cannot use the braille tables a.ctb, b.cti for braille output. "
+					"liblouis translates with them until NVDA's configuration is reset or NVDA restarts. "
+					"The NVDA log has the details.",
+				),
+				mock.call(
+					patch.showError,
+					"louis-rs cannot use the braille tables a.ctb, b.cti for braille input. "
+					"liblouis translates with them until NVDA's configuration is reset or NVDA restarts. "
+					"The NVDA log has the details.",
+				),
+			],
+		)
 
 	def test_cached_translator_is_read_in_one_step(self):
 		class ClearedOnMembershipTest(dict):
@@ -118,13 +148,29 @@ class TestFallback(unittest.TestCase):
 			)
 		self.assertEqual(log.records, [])
 
-	def test_failing_translation_falls_back_and_logs_once(self):
+	def test_failing_translation_falls_back_and_reports_once_per_direction(self):
 		def failing(compiled: object) -> str:
 			raise RuntimeError("boom")
 
 		for _ in range(2):
 			self.assertEqual(self.louisPatch._run(["a.ctb"], False, failing, fallback), "liblouis")
-		self.assertEqual([level for level, _ in log.records], ["exception"])
+			self.assertEqual(self.louisPatch._run(["a.ctb"], True, failing, fallback), "liblouis")
+		self.assertEqual([level for level, _ in log.records], ["exception", "exception"])
+		self.assertEqual(
+			self.callAfter.call_args_list,
+			[
+				mock.call(
+					patch.showError,
+					"louis-rs failed to translate braille output with the braille tables a.ctb. "
+					"liblouis translated it instead. The NVDA log has the details.",
+				),
+				mock.call(
+					patch.showError,
+					"louis-rs failed to translate braille input with the braille tables a.ctb. "
+					"liblouis translated it instead. The NVDA log has the details.",
+				),
+			],
+		)
 
 	def test_rust_panic_falls_back(self):
 		def panicking(compiled: object) -> str:
@@ -146,6 +192,7 @@ class TestFallback(unittest.TestCase):
 		self.louisPatch._run(["a.ctb"], False, work, fallback)
 		self.assertEqual(self.compile.call_count, 2)
 		self.assertEqual(len(log.recordsAt("error")), 2)
+		self.assertEqual(self.callAfter.call_count, 2)
 
 
 class PatchTestCase(unittest.TestCase):

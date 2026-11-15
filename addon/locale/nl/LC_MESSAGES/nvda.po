@@ -1,0 +1,52 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: 'rustyBraille' '0.1.0'\n"
+"Report-Msgid-Bugs-To: 'nvda-translations@groups.io'\n"
+"POT-Creation-Date: 2026-11-14 20:20+0100\n"
+"PO-Revision-Date: 2026-11-14 20:20+0100\n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"Language: nl\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#. Translators: Title of the dialog that reports a louis-rs failure.
+#. Add-on summary/title, usually the user visible name of the add-on
+#. Translators: Summary/title for this add-on
+#. to be shown on installation and add-on information found in add-on store
+msgid "Rusty Braille"
+msgstr "Rusty Braille"
+
+#. Translators: Reported when louis-rs cannot use the braille input tables.
+#. {tables} is a comma-separated list of table file names.
+#, python-brace-format
+msgid "louis-rs cannot use the braille tables {tables} for braille input. liblouis translates with them until NVDA's configuration is reset or NVDA restarts. The NVDA log has the details."
+msgstr "louis-rs kan de brailletabellen {tables} niet gebruiken voor braille-invoer. Tot de configuratie van NVDA wordt teruggezet of NVDA opnieuw start, vertaalt liblouis met deze tabellen. Het NVDA-logboek bevat de details."
+
+#. Translators: Reported when louis-rs cannot use the braille output tables.
+#. {tables} is a comma-separated list of table file names.
+#, python-brace-format
+msgid "louis-rs cannot use the braille tables {tables} for braille output. liblouis translates with them until NVDA's configuration is reset or NVDA restarts. The NVDA log has the details."
+msgstr "louis-rs kan de brailletabellen {tables} niet gebruiken voor braille-uitvoer. Tot de configuratie van NVDA wordt teruggezet of NVDA opnieuw start, vertaalt liblouis met deze tabellen. Het NVDA-logboek bevat de details."
+
+#. Translators: Reported when louis-rs fails to translate braille input.
+#. {tables} is a comma-separated list of table file names.
+#, python-brace-format
+msgid "louis-rs failed to translate braille input with the braille tables {tables}. liblouis translated it instead. The NVDA log has the details."
+msgstr "louis-rs kon braille-invoer niet vertalen met de brailletabellen {tables}. liblouis heeft dit in plaats daarvan vertaald. Het NVDA-logboek bevat de details."
+
+#. Translators: Reported when louis-rs fails to translate braille output.
+#. {tables} is a comma-separated list of table file names.
+#, python-brace-format
+msgid "louis-rs failed to translate braille output with the braille tables {tables}. liblouis translated it instead. The NVDA log has the details."
+msgstr "louis-rs kon braille-uitvoer niet vertalen met de brailletabellen {tables}. liblouis heeft dit in plaats daarvan vertaald. Het NVDA-logboek bevat de details."
+
+msgid "Braille translation powered by louis-rs, a Rust re-implementation of liblouis. Experimental."
+msgstr "Braillevertaling met louis-rs, een herimplementatie van liblouis in Rust. Experimenteel."
+
+#. Brief changelog for this version
+#. Translators: what's new content for the add-on version to be shown in the add-on store
+msgid "Initial experimental release."
+msgstr "Eerste experimentele uitgave."

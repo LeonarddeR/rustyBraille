@@ -5,12 +5,14 @@
 """Stand-ins for NVDA runtime modules, installed into ``sys.modules``.
 
 Only what ``globalPlugins.rustyBraille`` imports is stubbed: ``logHandler``,
-``globalPluginHandler``, ``addonHandler``, ``louisHelper``, ``brailleTables`` and ``config``.
+``globalPluginHandler``, ``addonHandler``, ``louisHelper``, ``brailleTables``, ``config``,
+``wx`` and ``gui.message``. The gettext function ``_`` is installed as a builtin that returns its argument.
 Table names resolve against ``tests/tables``.
 """
 
 from __future__ import annotations
 
+import builtins
 import enum
 import inspect
 import sys
@@ -126,6 +128,20 @@ def install():
 		version = "0.0-test"
 
 	addonHandler.getCodeAddon = lambda: Addon()
+	addonHandler.initTranslation = lambda: None
+	builtins._ = lambda message: message
+
+	wx = _module("wx")
+	wx.CallAfter = Mock()
+
+	gui = _module("gui")
+	gui.message = _module("gui.message")
+
+	class DialogType(enum.Enum):
+		ERROR = enum.auto()
+
+	gui.message.DialogType = DialogType
+	gui.message.MessageDialog = Mock()
 
 	config = _module("config")
 	config.post_configReset = FakeAction()

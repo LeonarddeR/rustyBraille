@@ -15,8 +15,9 @@ While this add-on is enabled, those two functions run louis-rs instead of liblou
 Everything else stays as it is: the list of braille tables, the table language detection and NVDA's own log line about the liblouis version still come from liblouis, which remains loaded.
 
 If louis-rs cannot compile the selected table, that table is served by liblouis until NVDA's configuration is reset or NVDA restarts.
-One line in the NVDA log tells you when that happens.
 If a single translation fails, that translation falls back to liblouis as well.
+Either way, an error dialog tells you, once for braille output and once for braille input.
+The NVDA log has the details.
 
 ## Checking which engine is in use
 

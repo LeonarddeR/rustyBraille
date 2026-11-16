@@ -24,17 +24,6 @@ The NVDA log has the details.
 After starting NVDA, the log (NVDA+F1) contains a line starting with "Rusty Braille" that names the louis-py version in use.
 A line starting with "louis-rs cannot use tables" means the selected table is handled by liblouis.
 
-From the NVDA Python console (NVDA+control+Z) you can compare both engines directly:
-
-```python
-import louisHelper
-tables = ["en-ueb-g2.ctb", "braille-patterns.cti"]
-louisHelper.translate(tables, "Hello world", cursorPos=3)
-louisHelper.translate.__self__._originals["translate"](tables, "Hello world", cursorPos=3)
-```
-
-The first call uses louis-rs, the second the original liblouis function.
-
 ## Known gaps
 
 * Characters a table does not define are shown as a `\x` escape with the character's code, as in liblouis, but the cells around and inside the escape can differ from liblouis's.

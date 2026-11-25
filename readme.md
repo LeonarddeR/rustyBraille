@@ -21,7 +21,7 @@ The NVDA log has the details.
 
 ## Checking which engine is in use
 
-After starting NVDA, the log (NVDA+F1) contains a line starting with "Rusty Braille" that names the louis-py version in use.
+After starting NVDA, the log (NVDA+F1) contains a line starting with "Rusty Braille" that names the louis-rs and louis-py versions in use.
 A line starting with "louis-rs cannot use tables" means the selected table is handled by liblouis.
 
 ## Known gaps

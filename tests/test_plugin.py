@@ -12,7 +12,7 @@ from unittest import mock
 import config
 import louisHelper
 from globalPlugins import rustyBraille
-from globalPlugins.rustyBraille import patch
+from globalPlugins.rustyBraille import louis_py, patch
 from logHandler import log
 
 
@@ -34,7 +34,7 @@ class TestGlobalPlugin(unittest.TestCase):
 	def test_init_logs_the_engine_switch(self):
 		self.assertTrue(
 			any(
-				message.startswith("Rusty Braille ") and "louis-rs" in message
+				message.startswith("Rusty Braille ") and f"louis-rs {louis_py.LOUIS_RS_VERSION}" in message
 				for message in log.recordsAt("info")
 			),
 		)

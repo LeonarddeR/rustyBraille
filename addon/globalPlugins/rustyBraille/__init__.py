@@ -31,7 +31,7 @@ class GlobalPlugin(globalPluginHandler.GlobalPlugin):
 		config.post_configReset.register(louisPatch.clearCache)
 		log.info(
 			f"Rusty Braille {addon.version}: louisHelper.translate and backTranslate "
-			f"now use louis-rs (louis_py {louis_py.__version__})",
+			f"now use louis-rs {louis_py.LOUIS_RS_VERSION} (louis_py {louis_py.__version__})",
 		)
 
 	def terminate(self):

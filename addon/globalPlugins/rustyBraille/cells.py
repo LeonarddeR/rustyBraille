@@ -15,7 +15,7 @@ UNICODE_BRAILLE_START = 0x2800
 
 
 def unicodeToCells(braille: str) -> list[int]:
-	"""Convert louis-rs output to cells, without virtual dots.
+	"""Convert louis-rs output to cells.
 
 	:param braille: Text as louis-rs outputs it.
 	:return: One cell per character.

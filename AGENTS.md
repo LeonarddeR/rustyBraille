@@ -48,8 +48,6 @@ At the vendored revision louis-rs looks tables and `include` lines up only in th
 
 louis-rs applies the `COMPBRL_AT_CURSOR` and `PARTIAL_TRANS` modes NVDA relies on. `NO_UNDEFINED` is not fully applied ([louis-rs #35](https://github.com/liblouis/louis-rs/issues/35)): back-translating a cell that many NVDA tables do not define (ru, da, fi, hu and others) still puts Unicode braille into the text. The add-on deliberately does not strip it; the fix belongs in louis-rs. Undefined characters in forward translation also come out differently from liblouis.
 
-A cell with virtual dots (9 and A to F) comes out as U+F0000 plus the dot bits; `cells.unicodeToCells` drops the virtual dots.
-
 A table can fail to compile with `louis_py.TableCompileError` (a rule refers to something no rule defines, such as the base character of a `base` rule) as well as `TableParseError`; both derive from `louis_py.LouisError`. The patch falls back to liblouis on every compile failure it can recover from and remembers it until the next configuration reset. A `LouisError` is logged as one line with the table errors, anything else with a traceback.
 
 See the readme's "Known gaps" before changing behaviour here.

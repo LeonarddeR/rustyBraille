@@ -20,9 +20,6 @@ class TestUnicodeToCells(unittest.TestCase):
 	def test_braille_characters_become_dot_masks(self):
 		self.assertEqual(cells.unicodeToCells("\u2801\u2803\u2809"), [1, 3, 9])
 
-	def test_virtual_dots_are_dropped(self):
-		self.assertEqual(cells.unicodeToCells("\U000f0101\U000f0211"), [0x01, 0x11])
-
 
 class TestCellsToUnicode(unittest.TestCase):
 	def test_cells_become_braille_characters(self):

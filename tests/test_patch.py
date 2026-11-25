@@ -103,9 +103,14 @@ class TestFallback(unittest.TestCase):
 
 	def test_each_table_error_is_logged_once(self):
 		exc = louis_py.TableParseError("first problem (and 1 more)")
-		exc.errors = ["first problem", "second problem"]
+		exc.errors = [
+			louis_py.TableError(louis_py.TableErrorKind.SYNTAX, "first problem"),
+			louis_py.TableError(louis_py.TableErrorKind.NOT_FOUND, "second problem"),
+		]
 		self.compile.side_effect = exc
-		self.louisPatch._run(["a.ctb"], False, work, fallback)
+		for _ in range(2):
+			self.louisPatch._run(["a.ctb"], False, work, fallback)
+		self.compile.assert_called_once()
 		(message,) = log.recordsAt("error")
 		self.assertEqual(message.count("first problem"), 1)
 		self.assertIn("second problem", message)

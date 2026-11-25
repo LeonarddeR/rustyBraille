@@ -156,7 +156,7 @@ class LouisHelperPatch:
 			)
 			if isinstance(exc, louis_py.LouisError):
 				reasons = getattr(exc, "errors", None) or [str(exc)]
-				log.error(f"{message} {'; '.join(reasons)}")
+				log.error(f"{message} {'; '.join(map(str, reasons))}")
 			else:
 				log.exception(message)
 			wx.CallAfter(showError, compileFailureMessage(tables, backward))

@@ -29,10 +29,15 @@ addon_info = AddonInfo(
 		"Braille translation powered by louis-rs, a Rust re-implementation of liblouis. Experimental.",
 	),
 	# version
-	addon_version="0.1.0",
+	addon_version="0.1.1",
 	# Brief changelog for this version
 	# Translators: what's new content for the add-on version to be shown in the add-on store
-	addon_changelog=_("Initial experimental release."),
+	addon_changelog=_(
+		"Built on louis-rs 0.4.1. "
+		"Contracted English braille (UEB) handles capitals, emphasis and numbers more like liblouis. "
+		"Translation is faster with tables that have many match, context or multipass rules. "
+		"The NVDA log names the louis-rs version in use.",
+	),
 	# Author(s)
 	addon_author="Leonard de Ruijter <alderuijter@gmail.com>",
 	# URL for the add-on documentation support

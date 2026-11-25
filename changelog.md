@@ -1,3 +1,7 @@
-## 0.1.0
+## 0.1.1
 
-Initial experimental release. Braille translation and braille input back-translation in NVDA go through louis-rs; liblouis stays in use for tables louis-rs cannot compile and for everything else.
+Built on louis-rs 0.4.1.
+
+* Contracted English braille (UEB) handles capitals, emphasis and numbers more like liblouis.
+* Translation is faster with tables that have many match, context or multipass rules.
+* The NVDA log names the louis-rs version in use.

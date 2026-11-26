@@ -18,8 +18,8 @@ Toolchain: `uv` + SCons. Run from repo root.
 | Task | Command |
 |---|---|
 | Install dev deps | `uv sync` |
-| Copy `louis_py` into the add-on (after every `uv sync`) | `uv run python scripts/copyLouisPy.py` |
-| Build add-on (`.nvda-addon`) | `uv run scons` |
+| Copy `louis_py` into the add-on for tests and type checks (after every `uv sync`) | `uv run python scripts/copyLouisPy.py` |
+| Build add-on (`.nvda-addon`), copying `louis_py` when it is missing or its version changed | `uv run scons` |
 | Translation template | `uv run scons pot` |
 | Lint + format + type check + tests | `uv run prek run --all-files` |
 | Type check only | `uv run ty check` |
@@ -40,7 +40,7 @@ Everything lives in one package, `addon/globalPlugins/rustyBraille/`:
 * `cells.py` — pure conversions: Unicode braille ↔ cell integers, NVDA mode bits → louis-py modes, typeform flags → `EmphasisSpan`s.
 * `translator.py` — `compileTranslator` (passes each table's directory plus NVDA's built-in table directory to louis-py as `search_path=`), `translateText`, `backTranslateCells`.
 * `patch.py` — `compileTables` (NVDA's `louisHelper._resolveTableInner` plus `brailleTables.TABLES_DIR`), `isRecoverable`, `showError` (a modal `gui.message.MessageDialog` of type `ERROR`), and `LouisHelperPatch`: the replacement `translate`/`backTranslate` with the NVDA→louis-rs mode and typeform maps, translators kept per table list and direction (a failed compile is kept as a failure), fallback to liblouis, each failure logged and queued as an error dialog through `wx.CallAfter` once per table list and direction, `install`/`uninstall` (after `uninstall`, calls that still reach the patch through another add-on's wrapper go to liblouis).
-* `louis_py/` — copied from the installed louis-py wheel by `scripts/copyLouisPy.py`; gitignored, never edit.
+* `louis_py/` — copied from the installed louis-py wheel by `scripts/copyLouisPy.py`, which `uv run scons` also runs; `uv run scons -c` removes it. Gitignored, never edit.
 
 ## louis-rs constraints the code works around
 
@@ -54,7 +54,7 @@ See the readme's "Known gaps" before changing behaviour here.
 
 ## Bundling louis_py
 
-The `addon` dependency group pins louis-py from PyPI (`louis-py==` in `pyproject.toml`). `uv sync` installs its `win_amd64` wheel; `scripts/copyLouisPy.py` copies the installed `louis_py` package and its LGPL `LICENSE` into the add-on. To update, raise the `louis-py==` pin, then run `uv lock`, `uv sync` and the copy script.
+The `addon` dependency group pins louis-py from PyPI (`louis-py==` in `pyproject.toml`). `uv sync` installs its `win_amd64` wheel; `scripts/copyLouisPy.py` copies the installed `louis_py` package and its LGPL `LICENSE` into the add-on. `sconstruct` runs the same copy before building the add-on, keyed on the installed louis-py version. Tests and `ty` import the copy without scons, so they still need the script after `uv sync`. To update, raise the `louis-py==` pin, then run `uv lock`, `uv sync` and the copy script.
 
 ## buildVars / manifest
 

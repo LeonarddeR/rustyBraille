@@ -8,6 +8,7 @@ import os.path
 import sys
 from pathlib import Path
 from collections.abc import Iterable
+from importlib.metadata import version as installedVersion
 from typing import Final
 
 # While names imported below are available by default in every SConscript
@@ -27,6 +28,7 @@ EnsurePythonVersion(3, 10)
 sys.dont_write_bytecode = True
 
 import buildVars  # NOQA: E402
+from scripts import copyLouisPy  # NOQA: E402
 
 
 def validateVersionNumber(key: str, val: str, _):
@@ -83,6 +85,15 @@ env.Append(**env["addon_info"])
 
 addonFile = env.File("${addon_name}-${addon_version}.nvda-addon")
 addon = env.NVDAAddon(addonFile, env.Dir(addonDir), excludePatterns=buildVars.excludedFiles)
+
+# Copy the installed louis_py package into the add-on.
+louisPy = env.Command(
+	env.Dir(str(copyLouisPy.TARGET)),
+	env.Value(installedVersion("louis-py")),
+	env.Action(lambda target, source, env: copyLouisPy.copyLouisPy(), None),
+)
+env.Depends(addon, louisPy)
+env.Clean(addon, louisPy)
 
 langDirs: list[FS.Dir] = [env.Dir(d) for d in env.Glob(localeDir/"*/") if d.isdir()]
 

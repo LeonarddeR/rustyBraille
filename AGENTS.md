@@ -9,7 +9,7 @@ Rusty Braille: experimental NVDA add-on that routes NVDA's braille translation t
 Sibling source repos (paths relative to this repo):
 
 * `..\nvda` — NVDA source, and it must be **built** (`scons source`), not merely cloned, for `ty` to resolve every NVDA import (`louisHelper`, `brailleTables`, `config`, …). CI gets a built tree from the `prepare-nvda-source` action. Look in the NVDA source for any API signature before guessing.
-* `..\louis-py` — source of the louis-py wheel the add-on bundles (see below).
+* `..\louis-py` — source of louis-py, which the add-on bundles from PyPI (see below).
 
 ## Build / Lint / Test
 
@@ -54,7 +54,7 @@ See the readme's "Known gaps" before changing behaviour here.
 
 ## Bundling louis_py
 
-The louis-py `win_amd64` wheel is committed in `wheels/`, and `[tool.uv.sources]` in `pyproject.toml` points the `addon` dependency group at it. `uv sync` installs it; `scripts/copyLouisPy.py` copies the installed `louis_py` package and its LGPL `LICENSE` into the add-on. To update, replace the wheel (for example with the `wheels-windows-latest-x64` artifact of a louis-py CI run), update the `louis-py==` pin and the source path to match it, then run `uv lock`, `uv sync` and the copy script. Once louis-py is on PyPI, drop the source entry.
+The `addon` dependency group pins louis-py from PyPI (`louis-py==` in `pyproject.toml`). `uv sync` installs its `win_amd64` wheel; `scripts/copyLouisPy.py` copies the installed `louis_py` package and its LGPL `LICENSE` into the add-on. To update, raise the `louis-py==` pin, then run `uv lock`, `uv sync` and the copy script.
 
 ## buildVars / manifest
 

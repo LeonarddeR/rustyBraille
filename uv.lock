@@ -73,9 +73,16 @@ wheels = [
 [[package]]
 name = "louis-py"
 version = "0.1.0"
-source = { path = "wheels/louis_py-0.1.0-cp311-abi3-win_amd64.whl" }
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/00/b5/580cdf90b5474091e984b2868c4996840753550a98573fb166671a73a310/louis_py-0.1.0.tar.gz", hash = "sha256:1d2cc3376749a265c499c08d9c91dbb7c30f491b5a344499a2f3c793298908f9", size = 44459, upload-time = "2026-11-26T09:44:05.001Z" }
 wheels = [
-    { filename = "louis_py-0.1.0-cp311-abi3-win_amd64.whl", hash = "sha256:c7f8f5c6c4b92bc0e09e9cc1d85fbe3cab3c1fe3604e6ca7d1d83749406ee4d7" },
+    { url = "https://files.pythonhosted.org/packages/e3/6a/2b0d549a93697ae39e49da6c8f2e8c263effedc56bc39a44efeeca119861/louis_py-0.1.0-cp311-abi3-macosx_10_12_universal2.macosx_10_12_x86_64.macosx_11_0_arm64.whl", hash = "sha256:e160048b87520cd36e2959278c64cb014f2302f2d0344d3ada74155484f73db6", size = 1647768, upload-time = "2026-11-26T09:43:53.731Z" },
+    { url = "https://files.pythonhosted.org/packages/71/93/9a84067ceb936da58d71c66cd9a1ca3e22ac8151922d63337a012e2cf54e/louis_py-0.1.0-cp311-abi3-manylinux2014_aarch64.manylinux_2_17_aarch64.whl", hash = "sha256:8722095d8846b6a2c9533a728bcdb0dc500b54eff803997d337015069444acb5", size = 875212, upload-time = "2026-11-26T09:43:55.265Z" },
+    { url = "https://files.pythonhosted.org/packages/1c/13/e6a2b9c87edb9b1bfbbd03b42767aa0ef0e74ae517e4ce9c76e936dbfbb7/louis_py-0.1.0-cp311-abi3-manylinux2014_x86_64.manylinux_2_17_x86_64.whl", hash = "sha256:e6c18e97a49f90ee2475f798a510dabc17807276bf898f6690768b4a6115c025", size = 905870, upload-time = "2026-11-26T09:43:56.994Z" },
+    { url = "https://files.pythonhosted.org/packages/d9/de/866ceff00e1bacd5727c5f1cf8ffe9e3c43f4b649723058973ba040b430d/louis_py-0.1.0-cp311-abi3-musllinux_1_2_aarch64.whl", hash = "sha256:eb498dd787e2537d6fdb7724e4f386f6024fc504f0385cbb76fcb5218bf29d63", size = 1054414, upload-time = "2026-11-26T09:43:58.612Z" },
+    { url = "https://files.pythonhosted.org/packages/6c/ed/902615d02428433bddb885633551c381b905ee85c54af6cbfd48923a0efa/louis_py-0.1.0-cp311-abi3-musllinux_1_2_x86_64.whl", hash = "sha256:2fcf2cf22dae496e94dd27bde51823e2c764862bea24bfe1da7730eb24068b66", size = 1119325, upload-time = "2026-11-26T09:44:00.368Z" },
+    { url = "https://files.pythonhosted.org/packages/40/78/888782772c56c9788500f0aa8f9b33cfa54d673875a5c8b558c1a353b191/louis_py-0.1.0-cp311-abi3-win_amd64.whl", hash = "sha256:44ecdd1a13f15562af19259c0b5bbb9804e40e5fae5239dccaec171a6bc1c930", size = 747275, upload-time = "2026-11-26T09:44:01.822Z" },
+    { url = "https://files.pythonhosted.org/packages/1e/58/f7c5fc34674135dd4337cefa823cb9b65fc27aed4868e78004f5664217d6/louis_py-0.1.0-cp311-abi3-win_arm64.whl", hash = "sha256:dca2cdc8db4be686c003f01258e75aeebc200ad8b2aac578520a79f2048e980d", size = 708318, upload-time = "2026-11-26T09:44:03.471Z" },
 ]
 
 [[package]]
@@ -305,14 +312,14 @@ typecheck = [
 [package.metadata]
 
 [package.metadata.requires-dev]
-addon = [{ name = "louis-py", path = "wheels/louis_py-0.1.0-cp311-abi3-win_amd64.whl" }]
+addon = [{ name = "louis-py", specifier = "==0.1.0" }]
 build = [
     { name = "markdown", specifier = "==3.10.3" },
     { name = "scons", specifier = "==4.11.1" },
 ]
 dev = [
     { name = "crowdin-api-client", specifier = "==1.28.0" },
-    { name = "louis-py", path = "wheels/louis_py-0.1.0-cp311-abi3-win_amd64.whl" },
+    { name = "louis-py", specifier = "==0.1.0" },
     { name = "lxml", specifier = "==6.1.2" },
     { name = "markdown", specifier = "==3.10.3" },
     { name = "markdown-link-attr-modifier", specifier = "==0.2.1" },
